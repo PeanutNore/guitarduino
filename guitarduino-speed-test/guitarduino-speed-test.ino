@@ -16,7 +16,7 @@
 
 const int signalPin = A0; //establish pin 0 as the analog input
 
-int sampleIn = 0; //sets up a variable to store the sample
+unsigned int sampleIn = 0; //sets up a variable to store the sample
 byte sampleOut = 0; //sets up a variable to convert the sample to 6 bits
 unsigned long startTime = 0;
 unsigned long endTime = 0;
@@ -43,7 +43,7 @@ void loop()
 {
   startTime = micros();
   sampleIn = analogRead(signalPin); //sample the input
-  sampleOut = map(sampleIn, 0, 1023, 0, 63); //convert the sample to 6 bits
+  sampleOut = sampleIn >> 4; //convert the sample to 6 bits
   DAConvert(sampleOut); //send the sample to the DAC
   endTime = micros();
   duration = endTime - startTime;
@@ -51,6 +51,6 @@ void loop()
   Serial.println(duration);
   Serial.println();
   delay(500);
-  //delayMicroseconds(80); //it takes 100 microseconds to sample, adjust for best sound
+  //delayMicroseconds(80); //it takes ~112 microseconds to sample 
 }
 
