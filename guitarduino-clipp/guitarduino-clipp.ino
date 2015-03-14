@@ -15,7 +15,7 @@ const int signalPin = A0; //establish pin 0 as the analog input
 
 int sampleIn = 0; //sets up a variable to store the sample
 byte sampleOut = 0; //sets up a variable to convert the sample to 6 bits
-
+double sampleAmped;
 void DAConvert(byte sample);//sends a 6 bit sample to the DAC
 
 void DAConvert(byte sample)
@@ -33,9 +33,10 @@ void loop()
 {
   sampleIn = analogRead(signalPin); //sample the input
   sampleIn = map(sampleIn, 0, 1023, -512, 511); //center the sample around 0
-  sampleIn = 5*sampleIn; //amplify the magnitude of the sample by 5
+  sampleAmped = pow(float(sampleIn), 3);
+  sampleIn = int(sampleAmped);
   sampleIn = constrain(sampleIn, -512, 511); //clip the sample back to 10 bits
   sampleOut = map(sampleIn, -512, 511, 0, 63); //convert the sample to 6 bits
   DAConvert(sampleOut); //send the sample to the DAC
-  delayMicroseconds(80); //it takes 100 microseconds to sample
+  //delayMicroseconds(80);
 }

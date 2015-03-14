@@ -40,8 +40,9 @@ void setup()
 void loop()
 {
   sampleIn = analogRead(signalPin); //sample the input
-  sampleOut = map(sampleIn, 0, 1023, 0, 63); //convert the sample to 6 bits
+  sampleOut = map(sampleIn, 0, 1023, 0, 15); //convert the sample to 4 bits
+  sampleOut = sampleOut << 2; //shift to highest bits for output
   DAConvert(sampleOut); //send the sample to the DAC
-  //delayMicroseconds(80); //it takes about 165 microseconds to run the above code, add delay here to decrease sample rate
+  delayMicroseconds(160); //it takes about 165 microseconds to run the above code, add delay here to decrease sample rate
 }
 

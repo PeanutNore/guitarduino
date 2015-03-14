@@ -18,7 +18,7 @@ const int signalPin = A0; //establish pin 0 as the analog input
 
 int sampleIn = 0; //sets up a variable to store the sample
 byte sampleOut = 0; //sets up a variable to convert the sample to 6 bits
-byte delaySamples[256]; //array to store delay samples
+int delaySample[256]; //array to store delay samples
 byte delayStep = 0;
 
 void DAConvert(byte sample);//sends a 6 bit sample to the DAC
@@ -35,7 +35,7 @@ void setup()
   int i;
   for (i = 0; i < 256; i++)
   {
-    delaySamples[i] = 0;
+    delaySample[i] = 0;
   }
 }
 
@@ -43,16 +43,17 @@ void setup()
 void loop()
 {
   sampleIn = analogRead(signalPin); //sample the input
-  sampleOut = map(sampleIn, 0, 1023, 0, 63); //convert the sample to 6 bits
-  delaySamples[delayStep] = sampleOut;
-  if (abs(32 - delaySamples[(delayStep - 256)]) < (abs(32 - sampleOut)))//if the current sample is higher amplitude than the delay sample
+  sampleIn = map(sampleIn, 0, 1023, -512, 511);
+  delaySample[delayStep] = sampleIn;
+  if (abs(sampleIn) > abs(delaySample[delayStep - 255]))
   {
-    DAConvert(sampleOut); //send the current sample to the DAC
+    sampleOut = map(sampleIn, -512, 511, 0, 63); //convert the sample to 6 bits  
   }
-  else //if the delay sample is higher amplitude
+  else
   {
-    DAConvert(delaySamples[(delayStep - 256)]);//send the delay sample to the DAC
+    sampleOut = map(delaySample[delayStep - 255], -512, 511, 0, 63);
   }
+  DAConvert(sampleOut); //send the current sample to the DAC
   delayStep++;
   delayMicroseconds(50); //it takes 100 microseconds to sample, adjust for best sound
 }
