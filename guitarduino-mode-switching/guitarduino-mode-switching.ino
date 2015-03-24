@@ -37,8 +37,7 @@ void setup()
   //Serial.begin(9600);
   DDRB = B111111; //sets Port B to output
   DDRD = B00000010; //sets Port D to input on high bits - bits 0 and 1 are serial
-  modeSetting = PIND; //reads the mode switches on Port D
-  modeSetting = modeSetting >> 2;
+  modeSetting = PIND >> 2; //reads the mode switches on Port D
   // create loops here to do something different based on the modes
   while (modeSetting == 1)
   {
