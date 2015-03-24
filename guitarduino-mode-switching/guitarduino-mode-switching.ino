@@ -70,7 +70,7 @@ void setup()
       sampleIn = analogRead(signalPin); //sample the input
       sampleOut = sampleIn >> 4; //toss the 4 least significant bits
       DAConvert(sampleOut); //send the sample to the DAC
-      delayMicroseconds(280); /
+      delayMicroseconds(280); 
   }
   //Mode 5: SRR, ~2.23khz
   while (modeSetting == 5)
@@ -132,35 +132,37 @@ void setup()
       DAConvert(sampleOut); //send the sample to the DAC
       delayMicroseconds(504);
   }
-  //Mode 12: 4x gain
+  //Mode 12: 8x gain
   while (modeSetting == 12)
   {
       sampleIn = analogRead(signalPin); //sample the input
-      sampleAdj = map(sampleIn, 0, 1023, -512, 511); //zero-center the input, store in adjustment variable
-      sampleAdj *= 4; //apply gain
+      sampleAdj = map(sampleIn, 0, 1023, -4096, 4095); //zero-center the input with 8x gain, store in adjustment variable
       sampleAdj = constrain(sampleAdj, -512, 511); //constrain to limits
       sampleOut = map(sampleAdj, -512, 511, 0, 63); //map to 6 bits for output
       DAConvert(sampleOut); //send the sample to the DAC
   }
-  //Mode 13: 8x gain
+  //Mode 13: 16x gain
   while (modeSetting == 13)
   {
       sampleIn = analogRead(signalPin); //sample the input
-      sampleAdj = map(sampleIn, 0, 1023, -512, 511); //zero-center the input, store in adjustment variable
-      sampleAdj *= 8; //apply gain
+      sampleAdj = map(sampleIn, 0, 1023, -8192, 8191); //zero-center the input with 16x gain, store in adjustment variable
       sampleAdj = constrain(sampleAdj, -512, 511); //constrain to limits
       sampleOut = map(sampleAdj, -512, 511, 0, 63); //map to 6 bits for output
       DAConvert(sampleOut); //send the sample to the DAC
   }
-  //Mode 14: 16x gain
+  //Mode 14: square wave w/ hysteresis
   while (modeSetting == 14)
   {
       sampleIn = analogRead(signalPin); //sample the input
-      sampleAdj = map(sampleIn, 0, 1023, -512, 511); //zero-center the input, store in adjustment variable
-      sampleAdj *= 16; //apply gain
-      sampleAdj = constrain(sampleAdj, -512, 511); //constrain to limits
-      sampleOut = map(sampleAdj, -512, 511, 0, 63); //map to 6 bits for output
-      DAConvert(sampleOut); //send the sample to the DAC
+      if (sampleIn > 561)
+      {
+        sampleOut = 63; //
+      }
+      if (sampleIn < 471)
+      {
+        sampleOut = 0;
+      }
+      DAConvert(sampleOut);
   }
   //Mode 15: octave up (frequecy doubler / rectifier)
   while (modeSetting == 15)
