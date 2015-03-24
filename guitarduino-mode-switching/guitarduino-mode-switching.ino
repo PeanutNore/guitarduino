@@ -1,5 +1,3 @@
-
-
 /*  GUITARDUINO Digital Guitar Effects Processor
     Copyright (C) 2011-2015  Samuel Brown
 
@@ -154,11 +152,11 @@ void setup()
   while (modeSetting == 14)
   {
       sampleIn = analogRead(signalPin); //sample the input
-      if (sampleIn > 561)
+      if (sampleIn > 521)
       {
         sampleOut = 63; //
       }
-      if (sampleIn < 471)
+      if (sampleIn < 501)
       {
         sampleOut = 0;
       }
