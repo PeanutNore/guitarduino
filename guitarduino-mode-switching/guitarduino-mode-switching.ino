@@ -23,13 +23,72 @@ byte modeSetting = 0; //Storse mode switch settings
 const boolean runLoop = true; //If a loop is running, it should run until the device is reset. Might not be needed.
 
 void DAConvert(byte sample);//sends a 6 bit sample to the DAC
-
-
+void LowPassFilter();
+void HighPassFilter();
 
 void DAConvert(byte sample)
 {
   PORTB = sample;
 }
+
+void LowPassFilter()
+{
+  const float b[19] = {-0.002693840, -0.002519748, 0.005014695, 0.015641050, 0.000000000, 
+                    -0.046914239, -0.048021820, 0.083481298, 0.294332820, 0.400000000, 
+                    0.294332820, 0.083481298, -0.048021820, -0.046914239, 0.000000000,
+                    0.015641050, 0.005014695, -0.002519748, -0.002693840}; 
+                    // Incants the arcane numbers (Coefficients for Goertzel Algorithm)
+  unsigned int sampleSum = 0;
+  unsigned int sampleBuffer[19];
+  
+  sampleIn = analogRead(signalPin); //sample the input
+  sampleIn = map(sampleIn, 0, 1023, -512, 511);
+  for (int i = 1; i < 18; i++) //shift all the samples in the buffer one position lower
+  {
+    sampleBuffer[i-1] = sampleBuffer[i];
+  }
+  sampleBuffer[18] = sampleIn; //add current sample to buffer as most recent
+  for (int i = 0; i < 19; i++) //Takess the sum of all samples in the buffer * their coefficients
+  {
+    sampleSum += b[i] * sampleBuffer[18-i];
+  }
+  sampleSum = constrain(sampleSum, -512, 511); //Probably not necessary, but try adding this if the output sounds weird
+  sampleSum = map(sampleSum, -512, 511, 0, 1023);
+  sampleOut = sampleSum >> 4;
+  //sampleOut = 63 - sampleOut; //Makes it a high pass filter instead of low pass
+  DAConvert(sampleOut); //send the sample to the DAC
+  sampleSum = 0; //reset the sum to zero
+}
+
+void HighPassFilter()
+{
+  const float b[19] = {-0.002693840, -0.002519748, 0.005014695, 0.015641050, 0.000000000, 
+                    -0.046914239, -0.048021820, 0.083481298, 0.294332820, 0.400000000, 
+                    0.294332820, 0.083481298, -0.048021820, -0.046914239, 0.000000000,
+                    0.015641050, 0.005014695, -0.002519748, -0.002693840}; 
+                    // Incants the arcane numbers (Coefficients for Goertzel Algorithm)
+  unsigned int sampleSum = 0;
+  unsigned int sampleBuffer[19];
+  
+  sampleIn = analogRead(signalPin); //sample the input
+  sampleIn = map(sampleIn, 0, 1023, -512, 511);
+  for (int i = 1; i < 18; i++) //shift all the samples in the buffer one position lower
+  {
+    sampleBuffer[i-1] = sampleBuffer[i];
+  }
+  sampleBuffer[18] = sampleIn; //add current sample to buffer as most recent
+  for (int i = 0; i < 19; i++) //Takess the sum of all samples in the buffer * their coefficients
+  {
+    sampleSum += b[i] * sampleBuffer[18-i];
+  }
+  sampleSum = constrain(sampleSum, -512, 511); //Probably not necessary, but try adding this if the output sounds weird
+  sampleSum = map(sampleSum, -512, 511, 0, 1023);
+  sampleOut = sampleSum >> 4;
+  sampleOut = 63 - sampleOut; //Makes it a high pass filter instead of low pass
+  DAConvert(sampleOut); //send the sample to the DAC
+  sampleSum = 0; //reset the sum to zero
+}
+
 
 void setup()
 {
@@ -95,23 +154,15 @@ void setup()
       DAConvert(sampleOut); //send the sample to the DAC
       delayMicroseconds(448); 
   }
-  //Mode 8: bitcrush (5 bit) + SRR, ~3.57khz
+  //Mode 8: Low Pass Filter
   while (modeSetting == 8)
   {
-      sampleIn = analogRead(signalPin); //sample the input
-      sampleOut = sampleIn >> 5; //toss the 6 least significant bits
-      sampleOut = sampleIn << 1; //shift to most significant bits for output
-      DAConvert(sampleOut); //send the sample to the DAC
-      delayMicroseconds(168);
+      LowPassFilter();
   }
-  //Mode 9: bitcrush (5 bit) + SRR, ~2.55khz
+  //Mode 9: High Pass Filter
   while (modeSetting == 9)
   {
-      sampleIn = analogRead(signalPin); //sample the input
-      sampleOut = sampleIn >> 5; //toss the 6 least significant bits
-      sampleOut = sampleIn << 1; //shift to most significant bits for output
-      DAConvert(sampleOut); //send the sample to the DAC
-      delayMicroseconds(280);
+      HighPassFilter();      
   }
   //Mode 10: bitcrush (5 bit) + SRR, ~1.98khz
   while (modeSetting == 10)
