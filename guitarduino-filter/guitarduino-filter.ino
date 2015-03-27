@@ -21,7 +21,7 @@ const float b[19] = {-0.002693840, -0.002519748, 0.005014695, 0.015641050, 0.000
 unsigned long startTime = 0;
 unsigned long endTime = 0;
 int duration = 0;
-int sampleIn = 0; //sets up a variable to store the sample
+unsigned int sampleIn = 0; //sets up a variable to store the sample
 int sampleSum = 0;
 byte sampleOut = 0; //sets up a variable to convert the sample to 6 bits
 unsigned int sampleBuffer[19];
@@ -52,7 +52,6 @@ void loop()
 {
   startTime = micros();
   sampleIn = analogRead(signalPin); //sample the input
-  sampleIn = map(sampleIn, 0, 1023, -512, 511);
   for (int i = 1; i < 18; i++) //shift all the samples in the buffer one position lower
   {
     sampleBuffer[i-1] = sampleBuffer[i];
@@ -62,8 +61,7 @@ void loop()
   {
     sampleSum += b[i] * sampleBuffer[18-i];
   }
-  sampleSum = constrain(sampleSum, -512, 511); //Probably not necessary, but try adding this if the output sounds weird
-  sampleSum = map(sampleSum, -512, 511, 0, 1023);
+  sampleSum = constrain(sampleSum, 0, 1023); //Probably not necessary, but try adding this if the output sounds weird
   sampleOut = sampleSum >> 4;
   //sampleOut = 63 - sampleOut; //Makes it a high pass filter instead of low pass
   DAConvert(sampleOut); //send the sample to the DAC

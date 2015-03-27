@@ -38,12 +38,11 @@ void LowPassFilter()
                     0.294332820, 0.083481298, -0.048021820, -0.046914239, 0.000000000,
                     0.015641050, 0.005014695, -0.002519748, -0.002693840}; 
                     // Incants the arcane numbers (Coefficients for Goertzel Algorithm)
-  int sampleInF = 0;
-  int sampleSum = 0;
-  int sampleBuffer[19];
+  unsigned int sampleInF = 0;
+  unsigned int sampleSum = 0;
+  unsigned int sampleBuffer[19];
   
   sampleInF = analogRead(signalPin); //sample the input
-  sampleInF = map(sampleIn, 0, 1023, -512, 511);
   for (int i = 1; i < 18; i++) //shift all the samples in the buffer one position lower
   {
     sampleBuffer[i-1] = sampleBuffer[i];
@@ -53,8 +52,7 @@ void LowPassFilter()
   {
     sampleSum += b[i] * sampleBuffer[18-i];
   }
-  sampleSum = constrain(sampleSum, -512, 511); //Probably not necessary, but try adding this if the output sounds weird
-  sampleSum = map(sampleSum, -512, 511, 0, 1023);
+  sampleSum = constrain(sampleSum, 0, 1023); //Probably not necessary, but try adding this if the output sounds weird
   sampleOut = sampleSum >> 4;
   //sampleOut = 63 - sampleOut; //Makes it a high pass filter instead of low pass
   DAConvert(sampleOut); //send the sample to the DAC
@@ -68,12 +66,11 @@ void HighPassFilter()
                     0.294332820, 0.083481298, -0.048021820, -0.046914239, 0.000000000,
                     0.015641050, 0.005014695, -0.002519748, -0.002693840}; 
                     // Incants the arcane numbers (Coefficients for Goertzel Algorithm)
-  int sampleInF = 0;
-  int sampleSum = 0;
-  int sampleBuffer[19];
+  unsigned int sampleInF = 0;
+  unsigned int sampleSum = 0;
+  unsigned int sampleBuffer[19];
   
   sampleInF = analogRead(signalPin); //sample the input
-  sampleInF = map(sampleIn, 0, 1023, -512, 511);
   for (int i = 1; i < 18; i++) //shift all the samples in the buffer one position lower
   {
     sampleBuffer[i-1] = sampleBuffer[i];
@@ -83,8 +80,7 @@ void HighPassFilter()
   {
     sampleSum += b[i] * sampleBuffer[18-i];
   }
-  sampleSum = constrain(sampleSum, -512, 511); //Probably not necessary, but try adding this if the output sounds weird
-  sampleSum = map(sampleSum, -512, 511, 0, 1023);
+  sampleSum = constrain(sampleSum, 0, 1023); //Probably not necessary, but try adding this if the output sounds weird
   sampleOut = sampleSum >> 4;
   sampleOut = 63 - sampleOut; //Makes it a high pass filter instead of low pass
   DAConvert(sampleOut); //send the sample to the DAC
