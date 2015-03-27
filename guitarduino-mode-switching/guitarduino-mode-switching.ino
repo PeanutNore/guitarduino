@@ -38,6 +38,7 @@ void setup()
   DDRD = B00000010; //sets Port D to input on high bits - bits 0 and 1 are serial
   modeSetting = PIND >> 2; //reads the mode switches on Port D
   // create loops here to do something different based on the modes
+  //Mode 0 in loop() - 8.7khz input/output
   //Mode 1: SRR, ~4.46khz
   while (modeSetting == 1)
   {
