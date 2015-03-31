@@ -134,13 +134,16 @@ void setup()
       DAConvert(sampleOut); //send the sample to the DAC
       delayMicroseconds(392); 
   }
-  //Mode 7: SRR, ~1.79khz
+  //Mode 7: Instant Attack Compressor
   while (modeSetting == 7)
   {
       sampleIn = analogRead(signalPin); //sample the input
-      sampleOut = sampleIn >> 4; //toss the 4 least significant bits
+      sampleAdj = sampleIn - 512; //Zero center the input
+      sampleFloat = sampleAdj / 512; 
+      sampleFloat = (2 * sampleFloat) / (1+ abs(sampleFloat)); //Compress the sample
+      sampleAdj = sampleFloat * 512; //Put sample in range for output
+      sampleOut map(sampleAdj, -512, 511, 0, 63); //toss the 4 least significant bits
       DAConvert(sampleOut); //send the sample to the DAC
-      delayMicroseconds(448); 
   }
   //Mode 8: Low Pass Filter
   while (modeSetting == 8)
@@ -152,23 +155,22 @@ void setup()
   {
       HighPassFilter();      
   }
-  //Mode 10: bitcrush (5 bit) + SRR, ~1.98khz
+  //Mode 10: bitcrush (4 bit) + SRR ("hi fi")
   while (modeSetting == 10)
   {
       sampleIn = analogRead(signalPin); //sample the input
-      sampleOut = sampleIn >> 5; //toss the 6 least significant bits
-      sampleOut = sampleIn << 1; //shift to most significant bits for output
+      sampleOut = map(sampleIn, 0, 1023, 0, 15); //toss the 6 least significant bits
+      sampleOut = map(sampleOut, 0, 15, 0, 63); //shift to most significant bits for output
       DAConvert(sampleOut); //send the sample to the DAC
-      delayMicroseconds(392);
   }
-  //Mode 11: bitcrush (5 bit) + SRR, ~1.62khz
+  //Mode 11: bitcrush (5 bit) + SRR ("lo fi")
   while (modeSetting == 11)
   {
       sampleIn = analogRead(signalPin); //sample the input
-      sampleOut = sampleIn >> 5; //toss the 6 least significant bits
-      sampleOut = sampleIn << 1; //shift to most significant bits for output
+      sampleOut = map(sampleIn, 0, 1023, 0, 15); //toss the 6 least significant bits
+      sampleOut = map(sampleOut, 0, 15, 0, 63); //shift to most significant bits for output
       DAConvert(sampleOut); //send the sample to the DAC
-      delayMicroseconds(504);
+      delayMicroseconds(392);
   }
   //Mode 12: 8x gain
   while (modeSetting == 12)
@@ -206,7 +208,7 @@ void setup()
   while (modeSetting == 15)
   {
       sampleIn = analogRead(signalPin); //sample the input
-      sampleAdj = map(sampleIn, 0, 1023, -512, 511); //zero-center the input, store in adjustment variable
+      sampleAdj sampleIn - 512; //zero-center the input, store in adjustment variable
       sampleAdj = abs(sampleAdj); //"rectify" the sample (doubles frequency)
       sampleOut = map(sampleAdj, 0, 512, 0, 63); //map to 6 bits for output
       DAConvert(sampleOut); //send the sample to the DAC
