@@ -142,7 +142,7 @@ void setup()
       sampleFloat = sampleAdj / 512; 
       sampleFloat = (2 * sampleFloat) / (1+ abs(sampleFloat)); //Compress the sample
       sampleAdj = sampleFloat * 512; //Put sample in range for output
-      sampleOut map(sampleAdj, -512, 511, 0, 63); //toss the 4 least significant bits
+      sampleOut = map(sampleAdj, -512, 511, 0, 63); //toss the 4 least significant bits
       DAConvert(sampleOut); //send the sample to the DAC
   }
   //Mode 8: Low Pass Filter
