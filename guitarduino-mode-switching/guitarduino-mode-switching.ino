@@ -141,6 +141,7 @@ void setup()
       sampleAdj = sampleIn - 512; //Zero center the input
       sampleFloat = sampleAdj / 512; 
       sampleFloat = (2 * sampleFloat) / (1+ abs(sampleFloat)); //Compress the sample
+      sampleFloat *= 1.2; //A little make-up gain
       sampleAdj = sampleFloat * 512; //Put sample in range for output
       sampleOut = map(sampleAdj, -512, 511, 0, 63); //toss the 4 least significant bits
       DAConvert(sampleOut); //send the sample to the DAC
@@ -172,20 +173,20 @@ void setup()
       DAConvert(sampleOut); //send the sample to the DAC
       delayMicroseconds(392);
   }
-  //Mode 12: 8x gain
+  //Mode 12: 16x gain
   while (modeSetting == 12)
   {
       sampleIn = analogRead(signalPin); //sample the input
-      sampleAdj = map(sampleIn, 0, 1023, -4096, 4095); //zero-center the input with 8x gain, store in adjustment variable
+      sampleAdj = map(sampleIn, 0, 1023, -8192, 8191); //zero-center the input with 16x gain, store in adjustment variable
       sampleAdj = constrain(sampleAdj, -512, 511); //constrain to limits
       sampleOut = map(sampleAdj, -512, 511, 0, 63); //map to 6 bits for output
       DAConvert(sampleOut); //send the sample to the DAC
   }
-  //Mode 13: 16x gain
+  //Mode 13: SLAM!!! 64x gain
   while (modeSetting == 13)
   {
       sampleIn = analogRead(signalPin); //sample the input
-      sampleAdj = map(sampleIn, 0, 1023, -8192, 8191); //zero-center the input with 16x gain, store in adjustment variable
+      sampleAdj = map(sampleIn, 0, 1023, -32768, 32767); //zero-center the input with 64x gain, store in adjustment variable
       sampleAdj = constrain(sampleAdj, -512, 511); //constrain to limits
       sampleOut = map(sampleAdj, -512, 511, 0, 63); //map to 6 bits for output
       DAConvert(sampleOut); //send the sample to the DAC
@@ -208,7 +209,7 @@ void setup()
   while (modeSetting == 15)
   {
       sampleIn = analogRead(signalPin); //sample the input
-      sampleAdj sampleIn - 512; //zero-center the input, store in adjustment variable
+      sampleAdj = sampleIn - 512; //zero-center the input, store in adjustment variable
       sampleAdj = abs(sampleAdj); //"rectify" the sample (doubles frequency)
       sampleOut = map(sampleAdj, 0, 512, 0, 63); //map to 6 bits for output
       DAConvert(sampleOut); //send the sample to the DAC
