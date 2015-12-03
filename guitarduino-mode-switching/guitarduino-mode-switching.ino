@@ -23,7 +23,7 @@ const float Goertzel[19] = {-0.002693840, -0.002519748, 0.005014695, 0.015641050
 float sampleFloat = 0;
 unsigned int sampleIn = 0; //Stores the sample from the ADC
 int sampleSum = 0; //Stores the sum used in filter algorithm
-float sampleBuffer[19] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; //buffers samples used in filter algorithm
+float sampleBuffer[19]; //buffers samples used in filter algorithm
 int sampleAdj = 0; // For "Adjusting" the sample when negative values are needed
 byte sampleOut = 0; //Stores the sample to send to the DAC
 byte modeSetting = 0; //Storse mode switch settings
@@ -89,6 +89,10 @@ void setup()
   //Serial.begin(9600);
   DDRB = B111111; //sets Port B to output
   DDRD = B00000010; //sets Port D to input on high bits - bits 0 and 1 are serial
+  for (int i = 0; i < 19; i++)
+  {
+      sampleBuffer[i] = 0;
+  }
   modeSetting = PIND >> 2; //reads the mode switches on Port D
   // create loops here to do something different based on the modes
   //Mode 0 in loop() - 8.7khz input/output
