@@ -22,8 +22,8 @@ const float Goertzel[19] = {-0.002693840, -0.002519748, 0.005014695, 0.015641050
                     // Incants the arcane numbers (Coefficients for Goertzel Algorithm)
 float sampleFloat = 0;
 unsigned int sampleIn = 0; //Stores the sample from the ADC
-unsigned int sampleSum = 0; //Stores the sum used in filter algorithm
-unsigned int sampleBuffer[19]; //buffers samples used in filter algorithm
+int sampleSum = 0; //Stores the sum used in filter algorithm
+float sampleBuffer[19] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; //buffers samples used in filter algorithm
 int sampleAdj = 0; // For "Adjusting" the sample when negative values are needed
 byte sampleOut = 0; //Stores the sample to send to the DAC
 byte modeSetting = 0; //Storse mode switch settings
@@ -41,17 +41,20 @@ void DAConvert(byte sample)
 void LowPassFilter()
 {
   sampleIn = analogRead(signalPin); //sample the input
+  sampleAdj = sampleIn - 512; //center around 0
+  sampleFloat = sampleAdj / 512; //transform into value from -1 to 1 for working sample
   for (int i = 1; i < 18; i++) //shift all the samples in the buffer one position lower
   {
     sampleBuffer[i-1] = sampleBuffer[i];
   }
-  sampleBuffer[18] = sampleIn; //add current sample to buffer as most recent
+  sampleBuffer[18] = sampleFloat; //add current sample to buffer as most recent
+  sampleFloat = 0; //clears the working sample
   for (int i = 0; i < 19; i++) //Takess the sum of all samples in the buffer * their coefficients
   {
     sampleFloat += Goertzel[i] * sampleBuffer[18-i];
   }
-  sampleSum = constrain(sampleFloat, 0, 1023); //turn the sample into an unsigned int in the appropriate range
-  sampleOut = sampleSum >> 4;
+  sampleSum = sampleFloat * 512; //make the working sample an INT again
+  sampleOut = map(sampleSum, -512, 511, 0, 63);
   //sampleOut = 63 - sampleOut; //Makes it a high pass filter instead of low pass
   DAConvert(sampleOut); //send the sample to the DAC
   sampleSum = 0; //reset the sum to zero
@@ -60,17 +63,20 @@ void LowPassFilter()
 void HighPassFilter()
 {
   sampleIn = analogRead(signalPin); //sample the input
+  sampleAdj = sampleIn - 512; //center around 0
+  sampleFloat = sampleAdj / 512; //transform into value from -1 to 1 for working sample
   for (int i = 1; i < 18; i++) //shift all the samples in the buffer one position lower
   {
     sampleBuffer[i-1] = sampleBuffer[i];
   }
-  sampleBuffer[18] = sampleIn; //add current sample to buffer as most recent
+  sampleBuffer[18] = sampleFloat; //add current sample to buffer as most recent
+  sampleFloat = 0; //clears the working sample
   for (int i = 0; i < 19; i++) //Takess the sum of all samples in the buffer * their coefficients
   {
     sampleFloat += Goertzel[i] * sampleBuffer[18-i];
   }
-  sampleSum = constrain(sampleFloat, 0, 1023); //Probably not necessary, but try adding this if the output sounds weird
-  sampleOut = sampleSum >> 4;
+  sampleSum = sampleFloat * 512; //make the working sample an INT again
+  sampleOut = map(sampleSum, -512, 511, 0, 63);
   sampleOut = 63 - sampleOut; //Makes it a high pass filter instead of low pass
   DAConvert(sampleOut); //send the sample to the DAC
   sampleSum = 0; //reset the sum to zero
