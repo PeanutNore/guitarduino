@@ -1,5 +1,8 @@
 # guitarduino
-Software for running Arduino based guitar effects. 
+Software for running Arduino based guitar effects. Free software licensed under GPL.
+
+guitarduino-mode-switching is the main release intended to run on the matching hardware to take advantage of the mode switches and provide 16 different effect modes.
+
 Supports ATMega 168/328 based Arduinos using onboard ADC and resistor ladder DAC on PORTB. 
 The schematic is included for the board used to develop these sketches and can be viewed / edited in Eagle 6 or higher.
 This instructable offers a good explanation of the resistor ladder DAC used: http://www.instructables.com/id/Arduino-Audio-Output/
