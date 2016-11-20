@@ -15,13 +15,14 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 
 const int signalPin = A0; //establish pin 0 as the analog input
-const float Goertzel[19] = {-0.002693840, -0.002519748, 0.005014695, 0.015641050, 0.000000000, 
-                    -0.046914239, -0.048021820, 0.083481298, 0.294332820, 0.400000000, 
-                    0.294332820, 0.083481298, -0.048021820, -0.046914239, 0.000000000,
-                    0.015641050, 0.005014695, -0.002519748, -0.002693840}; 
+const float Goertzel[19] = {-0.00269, -0.00252, 0.00501, 0.01564, 0.00000, 
+                    -0.04691, -0.04802, 0.08348, 0.29433, 0.40000, 
+                    0.29433, 0.08348, -0.04802, -0.04691, 0.00000,
+                    0.01564, 0.00501, -0.00251, -0.00269}; 
                     // Incants the arcane numbers (Coefficients for Goertzel Algorithm)
-float sampleFloat = 0;
+float sampleFloat = 0.0;
 unsigned int sampleIn = 0; //Stores the sample from the ADC
+unsigned int sampleABS = 0; //Stores the absolute value of the sample
 int sampleSum = 0; //Stores the sum used in filter algorithm
 float sampleBuffer[19]; //buffers samples used in filter algorithm
 int sampleAdj = 0; // For "Adjusting" the sample when negative values are needed
@@ -42,18 +43,19 @@ void LowPassFilter()
 {
   sampleIn = analogRead(signalPin); //sample the input
   sampleAdj = sampleIn - 512; //center around 0
-  sampleFloat = sampleAdj / 512.0; //transform into value from -1 to 1 for working sample
+  sampleFloat = (float)sampleAdj / 512.0; //transform into value from -1 to 1 for working sample
   for (int i = 1; i < 18; i++) //shift all the samples in the buffer one position lower
   {
     sampleBuffer[i-1] = sampleBuffer[i];
   }
   sampleBuffer[18] = sampleFloat; //add current sample to buffer as most recent
-  sampleFloat = 0; //clears the working sample
+  sampleFloat = 0.0; //clears the working sample
   for (int i = 0; i < 19; i++) //Takess the sum of all samples in the buffer * their coefficients
   {
     sampleFloat += Goertzel[i] * sampleBuffer[18-i];
   }
-  sampleSum = sampleFloat * 512; //make the working sample an INT again
+  sampleFloat *= 512.0;//rescale
+  sampleSum = (int)sampleFloat; //make the working sample an INT again
   sampleOut = map(sampleSum, -512, 511, 0, 63);
   //sampleOut = 63 - sampleOut; //Makes it a high pass filter instead of low pass
   DAConvert(sampleOut); //send the sample to the DAC
@@ -64,18 +66,19 @@ void HighPassFilter()
 {
   sampleIn = analogRead(signalPin); //sample the input
   sampleAdj = sampleIn - 512; //center around 0
-  sampleFloat = sampleAdj / 512.0; //transform into value from -1 to 1 for working sample
+  sampleFloat = (float)sampleAdj / 512.0; //transform into value from -1 to 1 for working sample
   for (int i = 1; i < 18; i++) //shift all the samples in the buffer one position lower
   {
     sampleBuffer[i-1] = sampleBuffer[i];
   }
   sampleBuffer[18] = sampleFloat; //add current sample to buffer as most recent
-  sampleFloat = 0; //clears the working sample
+  sampleFloat = 0.0; //clears the working sample
   for (int i = 0; i < 19; i++) //Takess the sum of all samples in the buffer * their coefficients
   {
     sampleFloat += Goertzel[i] * sampleBuffer[18-i];
   }
-  sampleSum = sampleFloat * 512; //make the working sample an INT again
+  sampleFloat *= 512.0;//rescale
+  sampleSum = (int)sampleFloat; //make the working sample an INT again
   sampleOut = map(sampleSum, -512, 511, 0, 63);
   sampleOut = 63 - sampleOut; //Makes it a high pass filter instead of low pass
   DAConvert(sampleOut); //send the sample to the DAC
@@ -128,43 +131,103 @@ void setup()
       DAConvert(sampleOut); //send the sample to the DAC
       delayMicroseconds(280); 
   }
-  //Mode 5: SRR, ~2.23khz
+  //Mode 5: SRR, ~1.98khz
   while (modeSetting == 5)
-  {
-      sampleIn = analogRead(signalPin); //sample the input
-      sampleOut = sampleIn >> 4; //toss the 4 least significant bits
-      DAConvert(sampleOut); //send the sample to the DAC
-      delayMicroseconds(336); 
-  }
-  //Mode 6: SRR, ~1.98khz
-   while (modeSetting == 6)
   {
       sampleIn = analogRead(signalPin); //sample the input
       sampleOut = sampleIn >> 4; //toss the 4 least significant bits
       DAConvert(sampleOut); //send the sample to the DAC
       delayMicroseconds(392); 
   }
+  //Mode 6LPF
+   while (modeSetting == 6)
+  {
+      LowPassFilter();
+  }
   //Mode 7: Instant Attack Compressor
   while (modeSetting == 7)
   {
       sampleIn = analogRead(signalPin); //sample the input
       sampleAdj = sampleIn - 512; //Zero center the input
-      sampleFloat = sampleAdj / 512; 
-      sampleFloat = (2 * sampleFloat) / (1+ abs(sampleFloat)); //Compress the sample
-      sampleFloat *= 1.2; //A little make-up gain
-      sampleAdj = sampleFloat * 512; //Put sample in range for output
-      sampleOut = map(sampleAdj, -512, 511, 0, 63); //toss the 4 least significant bits
+      sampleFloat = (float)sampleAdj / 512.0; 
+      sampleFloat = (2.0 * sampleFloat) / (1.0 + abs(sampleFloat)); //Compress the sample
+      sampleFloat *= 614.4; //A little make-up gain, rescale for output
+      sampleAdj = (int)sampleFloat; 
+      sampleAdj = constrain(sampleAdj, -512, 511);//Put sample in range for output
+      sampleIn = sampleAdj + 512;//return to positive values only
+      sampleOut = sampleIn >> 4;//toss the 4 least significant bits
       DAConvert(sampleOut); //send the sample to the DAC
   }
-  //Mode 8: Low Pass Filter
+  //Mode 8: Insane but faster Non-Linear Distortion
   while (modeSetting == 8)
   {
-      LowPassFilter();
+      sampleIn = analogRead(signalPin); //sample the input
+      sampleAdj = sampleIn - 512; // center around 0
+      if (sampleAdj < -448){
+        sampleAdj = -512;}
+      else if (sampleAdj < -384){
+        sampleAdj -= 128;}
+      else if (sampleAdj < -320){
+        sampleAdj -= 112;}
+      else if (sampleAdj < -256){
+        sampleAdj -= 96;}
+      else if (sampleAdj < -192){
+        sampleAdj -= 80;}
+      else if (sampleAdj < -128){
+        sampleAdj -= 64;}
+      else if (sampleAdj < -64){
+        sampleAdj -= 48;}
+      else if (sampleAdj < 0){
+        sampleAdj -= 32;}
+      else if (sampleAdj < 63){
+        sampleAdj += 32;}
+      else if (sampleAdj < 127){
+        sampleAdj += 48;}
+      else if (sampleAdj < 191){
+        sampleAdj += 64;}
+      else if (sampleAdj < 255){
+        sampleAdj += 80;}
+      else if (sampleAdj < 319){
+        sampleAdj += 96;}
+      else if (sampleAdj < 383){
+        sampleAdj += 112;}
+      else if (sampleAdj < 447){
+        sampleAdj += 128;}
+      else {
+        sampleAdj = 511;}
+      sampleAdj = constrain (sampleAdj, -512, 511);
+      sampleIn = sampleAdj + 512;
+      sampleOut = sampleIn >> 4; //toss the 4 least significant bits
+      DAConvert(sampleOut); //send the sample to the DAC
   }
-  //Mode 9: High Pass Filter
+  //Mode 9: Sane but slower Non-Linear
   while (modeSetting == 9)
   {
-      HighPassFilter();      
+      sampleIn = analogRead(signalPin); //sample the input
+      sampleAdj = sampleIn - 512; // center around 0
+      sampleFloat = (float)sampleAdj;
+      sampleABS = abs(sampleAdj);
+      if (sampleABS < 4){
+        sampleFloat *= 1.3;}
+      else if (sampleABS < 8){
+        sampleFloat *= 1.4;}
+      else if (sampleABS < 16){
+        sampleFloat *= 1.5;}
+      else if (sampleABS < 32){
+        sampleFloat *= 1.6;}
+      else if (sampleABS < 64){
+        sampleFloat *= 1.7;}
+      else if (sampleABS < 128){
+        sampleFloat *= 1.9;}
+      else if (sampleABS < 256){
+        sampleFloat *= 2.0;}
+      else {
+        sampleFloat = 511;}
+      sampleAdj = sampleFloat;
+      sampleAdj = constrain (sampleAdj, -512, 511);
+      sampleIn = sampleAdj + 512;
+      sampleOut = sampleIn >> 4; //toss the 4 least significant bits
+      DAConvert(sampleOut); //send the sample to the DAC   
   }
   //Mode 10: bitcrush (4 bit) + SRR ("hi fi")
   while (modeSetting == 10)
