@@ -42,7 +42,7 @@ void LowPassFilter()
 {
   sampleIn = analogRead(signalPin); //sample the input
   sampleAdj = sampleIn - 512; //center around 0
-  sampleFloat = sampleAdj / 512; //transform into value from -1 to 1 for working sample
+  sampleFloat = sampleAdj / 512.0; //transform into value from -1 to 1 for working sample
   for (int i = 1; i < 18; i++) //shift all the samples in the buffer one position lower
   {
     sampleBuffer[i-1] = sampleBuffer[i];
@@ -64,7 +64,7 @@ void HighPassFilter()
 {
   sampleIn = analogRead(signalPin); //sample the input
   sampleAdj = sampleIn - 512; //center around 0
-  sampleFloat = sampleAdj / 512; //transform into value from -1 to 1 for working sample
+  sampleFloat = sampleAdj / 512.0; //transform into value from -1 to 1 for working sample
   for (int i = 1; i < 18; i++) //shift all the samples in the buffer one position lower
   {
     sampleBuffer[i-1] = sampleBuffer[i];
